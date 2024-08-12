@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-api-deployment
+  namespace: portifolio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: back-todo
+  template:
+    metadata:
+      labels:
+        app: back-todo
+    spec:
+      containers:
+      - name: todo-api
+        image: leondeoliveirapedrosa/todo-api:dev
+        ports:
+        - containerPort: 8000
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-api-service
+  namespace: portifolio
+spec:
+  selector:
+    app: front-todo
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-todo-ingress
+  namespace: portifolio
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: todo-api.leonoliveira.com.br
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: todo-api-service
+            port:
+              number: 8000
